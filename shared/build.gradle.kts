@@ -11,18 +11,27 @@ kotlin {
             jvmTarget.set(JvmTarget.JVM_11)
         }
     }
-    
+
     iosArm64()
     iosSimulatorArm64()
-    
+
     jvm()
-    
+
     sourceSets {
         commonMain.dependencies {
-            // put your Multiplatform dependencies here
+            implementation(additionals.kotlinx.coroutines.core)
         }
+
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+        }
+
+        jvmMain.dependencies {
+            implementation(additionals.kotlinx.coroutines.jvm)
+        }
+
+        androidMain.dependencies {
+            implementation(additionals.kotlinx.coroutines.android)
         }
     }
 }
