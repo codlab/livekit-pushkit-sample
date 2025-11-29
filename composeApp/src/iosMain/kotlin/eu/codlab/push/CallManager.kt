@@ -1,6 +1,11 @@
 package eu.codlab.push
 
+import com.vopenia.livekit.Room
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.ObjCSignatureOverride
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import platform.AVFAudio.AVAudioSession
 import platform.AVFAudio.setActive
 import platform.CallKit.CXAnswerCallAction
@@ -94,6 +99,9 @@ object CurrentCall {
     var liveKitToken: String? = null
         private set
 
+    var room: Room? = null
+        private set
+
     fun configure(payload: InvitationPayload) = configure(
         livekitUrl = payload.livekitUrl,
         currentName = payload.inviter,
@@ -107,11 +115,25 @@ object CurrentCall {
         roomName: String,
         liveKitToken: String
     ) {
+        room = Room()
+
         this.livekitUrl = livekitUrl
         this.liveKitToken = liveKitToken
 
         this.currentName = currentName
         this.roomName = roomName
+    }
+
+    suspend fun connect() {
+        room!!.connect(livekitUrl!!, liveKitToken!!, false)
+    }
+
+    fun disconnect() {
+        room.let {
+            reset()
+
+            it?.disconnect()
+        }
     }
 
     fun reset() {
@@ -120,6 +142,27 @@ object CurrentCall {
         liveKitToken = null
         roomName = null
     }
+
+    @OptIn(DelicateCoroutinesApi::class)
+    fun didActivateAudioSession() {
+        room?.localParticipant?.let { localParticipant ->
+            val audioTracks = localParticipant.audioTracks.value
+            println("didActivateAudioSession having tracks ? $audioTracks")
+
+
+            if (audioTracks.isEmpty()) {
+                GlobalScope.launch {
+                    localParticipant.enableMicrophone(true)
+                }
+            }
+        }
+    }
+
+    fun didDeactivateAudioSession() {
+        room?.localParticipant?.audioTracks?.value?.let { audioTracks ->
+            println("didDeactivateAudioSession having tracks ? $audioTracks")
+        }
+    }
 }
 
 class CallManager(queue: NSObject) : NSObject(), CXProviderDelegateProtocol {
@@ -127,10 +170,6 @@ class CallManager(queue: NSObject) : NSObject(), CXProviderDelegateProtocol {
     private val callController = CXCallController()
     private var currentCallUuid: NSUUID? = null
     private var currentHandle: String? = null
-
-    // infos livekit ?
-    private var liveKitUrl: String? = null
-    private var liveKitToken: String? = null
 
     init {
         var config = CXProviderConfiguration("MonApp VoIP")
@@ -154,7 +193,7 @@ class CallManager(queue: NSObject) : NSObject(), CXProviderDelegateProtocol {
 
     override fun provider(provider: CXProvider, performStartCallAction: CXStartCallAction) {
         println("providerStartCallAction")
-        startAudioSessionIfNeeded()
+        // startAudioSessionIfNeeded()
 
         connectLiveKit { success ->
             println("having success ? $success")
@@ -172,7 +211,7 @@ class CallManager(queue: NSObject) : NSObject(), CXProviderDelegateProtocol {
 
     override fun provider(provider: CXProvider, performAnswerCallAction: CXAnswerCallAction) {
         println("providerAnswerCallAction")
-        startAudioSessionIfNeeded()
+        // startAudioSessionIfNeeded()
 
         connectLiveKit { success ->
             println("having success ? $success")
@@ -184,15 +223,22 @@ class CallManager(queue: NSObject) : NSObject(), CXProviderDelegateProtocol {
         }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     override fun provider(provider: CXProvider, performEndCallAction: CXEndCallAction) {
         println("providerEndCallAction")
 
-        //TODO disconnect livekit
+        GlobalScope.launch {
+            try {
+                CurrentCall.disconnect()
+            } catch (err: Throwable) {
+                err.printStackTrace()
+            }
 
-        stopAudioSessionIfNeeded()
-        performEndCallAction.fulfill()
-        currentCallUuid = null
-        currentHandle = null
+            stopAudioSessionIfNeeded()
+            performEndCallAction.fulfill()
+            currentCallUuid = null
+            currentHandle = null
+        }
     }
 
     //TODO -> manage audio session with this dichotomy issue
@@ -206,8 +252,18 @@ class CallManager(queue: NSObject) : NSObject(), CXProviderDelegateProtocol {
         super.provider(provider, didDeactivateAudioSession)
     }*/
 
+    @OptIn(DelicateCoroutinesApi::class)
     private fun connectLiveKit(completion: (Boolean) -> Unit) {
-        completion(true)
+        GlobalScope.launch {
+            try {
+                CurrentCall.connect()
+                completion(true)
+            } catch (err: Throwable) {
+                err.printStackTrace()
+
+                completion(false)
+            }
+        }
     }
 
     @OptIn(ExperimentalForeignApi::class)
@@ -285,6 +341,24 @@ class CallManager(queue: NSObject) : NSObject(), CXProviderDelegateProtocol {
 
         println("endCall request calling")
         request(transaction)
+    }
+
+    @ObjCSignatureOverride
+    @OptIn(ExperimentalForeignApi::class)
+    override fun provider(
+        provider: CXProvider,
+        didActivateAudioSession: objcnames.classes.AVAudioSession
+    ) {
+        CurrentCall.didActivateAudioSession()
+    }
+
+    @ObjCSignatureOverride
+    @OptIn(ExperimentalForeignApi::class)
+    override fun provider(
+        provider: CXProvider,
+        didDeactivateAudioSession: objcnames.classes.AVAudioSession
+    ) {
+        CurrentCall.didDeactivateAudioSession()
     }
 
     private fun request(transaction: CXTransaction) {

@@ -19,6 +19,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.vopenia.livekit.Room
 import eu.codlab.http.createClient
 import eu.codlab.push.push.PushController
 import io.ktor.client.request.post
@@ -26,7 +27,9 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -76,7 +79,16 @@ fun App() {
             Button(
                 onClick = {
                     showContent = !showContent
-                    ActualCallForwarder.outgoingCall()
+                    //ActualCallForwarder.outgoingCall()
+
+                    GlobalScope.launch {
+                        val room = Room()
+
+                        room.connect(
+                            "wss://vopenia-5m9onn6o.livekit.cloud",
+                            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJBUElHUVRlaXZHVEJKZXQiLCJleHAiOjE3NjQ0NjczNTMsInN1YiI6InRlc3QiLCJuYW1lIjoidGVzdCIsIm1ldGFkYXRhIjoic2FtcGxlIiwidmlkZW8iOnsicm9vbUpvaW4iOnRydWUsInJvb20iOiJ3ZWIifSwic2lwIjp7fX0.RLJRvL2QHzFa3JeYs6z864JrJmxNqAhX1UtiAnuNb_A"
+                        )
+                    }
                 }
             ) {
                 Text("Click me!")

@@ -73,6 +73,9 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(projects.shared)
             implementation(additionals.multiplatform.http.client)
+
+            implementation(libs.livekit.sdk)
+            implementation(libs.livekit.sdk.compose)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

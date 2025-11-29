@@ -18,6 +18,8 @@ pushy = "0.15.4"
 
 livekit-server = "0.10.1"
 
+livekit-sdk = "0.0.9-alpha6"
+
 [libraries]
 pushy = { module = "com.eatthepath:pushy", version.ref = "pushy"}
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -38,6 +40,9 @@ ktor-server-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version
 ktor-server-cors = { module = "io.ktor:ktor-server-cors", version.ref = "ktor" }
 ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
 livekit-server = { module = "io.livekit:livekit-server", version.ref = "livekit-server" }
+
+livekit-sdk = { module = "io.vopenia:vopenia", version.ref = "livekit-sdk" }
+livekit-sdk-compose = { module = "io.vopenia:vopenia-compose", version.ref = "livekit-sdk" }
 
 [plugins]
 ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
