@@ -1,8 +1,8 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.androidLibrary)
+    alias(additionals.plugins.kotlin.multiplatform)
+    alias(additionals.plugins.android.library)
     alias(additionals.plugins.kotlin.serialization)
 }
 

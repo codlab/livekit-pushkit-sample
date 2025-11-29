@@ -2,10 +2,11 @@ import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    alias(libs.plugins.kotlinMultiplatform)
-    alias(libs.plugins.androidApplication)
-    alias(libs.plugins.composeMultiplatform)
-    alias(libs.plugins.composeCompiler)
+    alias(additionals.plugins.kotlin.multiplatform)
+    alias(additionals.plugins.android.application)
+    alias(additionals.plugins.jetbrains.compose)
+    alias(additionals.plugins.compose.compiler)
+    alias(additionals.plugins.kotlin.cocoapods)
     alias(additionals.plugins.kotlin.serialization)
 }
 
@@ -23,6 +24,36 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
             isStatic = true
+        }
+    }
+
+    cocoapods {
+        version = "1.0"
+        summary = "Some description for a Kotlin/Native module"
+        homepage = "Link to a Kotlin/Native module homepage"
+
+        specRepos {
+            url("https://cdn.cocoapods.org")
+            url("https://github.com/livekit/podspecs")
+            url("https://github.com/vopenia-io/pod-repo")
+        }
+
+        ios.deploymentTarget = "16.0"
+        osx.deploymentTarget = "16.0"
+
+        podfile = project.file("../iosApp/Podfile")
+
+        framework {
+            baseName = "ComposeApp"
+            isStatic = true
+        }
+
+        listOf("LiveKitClient", "LiveKitClientKotlin").forEach {
+            pod(it) {
+                linkOnly = true
+                version = "2.6.0"
+                extraOpts += listOf("-compiler-option", "-fmodules")
+            }
         }
     }
     

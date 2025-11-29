@@ -1,5 +1,4 @@
 [versions]
-agp = "8.11.2"
 android-compileSdk = "36"
 android-minSdk = "24"
 android-targetSdk = "36"
@@ -41,10 +40,4 @@ ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negoti
 livekit-server = { module = "io.livekit:livekit-server", version.ref = "livekit-server" }
 
 [plugins]
-androidApplication = { id = "com.android.application", version.ref = "agp" }
-androidLibrary = { id = "com.android.library", version.ref = "agp" }
-composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
-composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
-kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 ktor = { id = "io.ktor.plugin", version.ref = "ktor" }
-kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
