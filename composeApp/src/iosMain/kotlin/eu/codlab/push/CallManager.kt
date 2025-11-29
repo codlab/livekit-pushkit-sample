@@ -83,6 +83,8 @@ fun CallManagerInstance(): CallManager {
 }
 
 object CurrentCall {
+    var livekitUrl: String? = null
+        private set
     var currentName: String? = null
         private set
 
@@ -92,13 +94,28 @@ object CurrentCall {
     var liveKitToken: String? = null
         private set
 
-    fun configure(currentName: String, roomName: String, liveKitToken: String) {
+    fun configure(payload: InvitationPayload) = configure(
+        livekitUrl = payload.livekitUrl,
+        currentName = payload.inviter,
+        roomName = payload.room,
+        liveKitToken = payload.accessToken
+    )
+
+    fun configure(
+        livekitUrl: String,
+        currentName: String,
+        roomName: String,
+        liveKitToken: String
+    ) {
+        this.livekitUrl = livekitUrl
+        this.liveKitToken = liveKitToken
+
         this.currentName = currentName
         this.roomName = roomName
-        this.liveKitToken = liveKitToken
     }
 
     fun reset() {
+        livekitUrl = null
         currentName = null
         liveKitToken = null
         roomName = null

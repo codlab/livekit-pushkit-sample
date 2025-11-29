@@ -123,6 +123,7 @@ fun Application.module(
                 call.respond(HttpStatusCode.NotFound)
             }
         }
+
         post("/token") {
             try {
                 val body = call.receive<BodyToken>()

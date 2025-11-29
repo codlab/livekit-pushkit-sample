@@ -4,6 +4,7 @@ import eu.codlab.push.push.PushControllerOnToken
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.usePinned
+import kotlinx.serialization.json.Json
 import platform.Foundation.NSData
 import platform.Foundation.NSString
 import platform.Foundation.base64Encoding
@@ -28,6 +29,7 @@ private var _instance: PushkitRegistry? = null
 
 class PushkitRegistry(queue: NSObject, private val pushType: PKPushType) : NSObject(),
     PKPushRegistryDelegateProtocol {
+    private val json = Json
     private val pkPushRegistry = PKPushRegistry(queue)
 
     fun initialize() {
@@ -83,19 +85,14 @@ class PushkitRegistry(queue: NSObject, private val pushType: PKPushType) : NSObj
             println("Notification :: key: $key, value: $value")
         }
 
-        val callerName = map["caller_name"]?.let {
-            (it as NSString).toString()
-        } ?: "Appel Entrant"
-        val roomName = map["livekit_room_name"]?.let {
-            (it as NSString).toString()
-        } ?: "livekit_room_name empty"
-        val livekitToken = map["livekit_token"]?.let {
-            (it as NSString).toString()
-        } ?: "livekit_token empty"
+        val payload = map["payload"]?.let { (it as NSString).toString() }?.let {
+            json.decodeFromString(InvitationPayload.serializer(), it)
+        }
 
+        println("having payload $payload")
 
-        CurrentCall.configure(callerName, roomName, livekitToken)
-        CallManagerInstance().reportIncomingCall(callerName)
+        CurrentCall.configure(payload!!)
+        CallManagerInstance().reportIncomingCall(payload.inviter)
 
         completion?.invoke()
     }
