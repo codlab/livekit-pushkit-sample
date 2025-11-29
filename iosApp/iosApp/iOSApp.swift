@@ -8,12 +8,13 @@ class AppDelegate: NSObject, UIApplicationDelegate {
                    didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
 
       _ = PushkitRegistryKt.Instance(queue: DispatchQueue.main, pushType: PKPushType.voIP.rawValue)
+      CallManagerKt.initializeCallManagerInstance(queue: DispatchQueue.main)
 
       return true
   }
     
   func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-    
+
   }
 
   func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable : Any]) async -> UIBackgroundFetchResult {

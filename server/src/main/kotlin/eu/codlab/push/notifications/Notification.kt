@@ -3,6 +3,8 @@ package eu.codlab.push.notifications
 import com.eatthepath.pushy.apns.ApnsClient
 import com.eatthepath.pushy.apns.DeliveryPriority
 import com.eatthepath.pushy.apns.PushType
+import com.eatthepath.pushy.apns.util.ApnsPayloadBuilder
+import com.eatthepath.pushy.apns.util.SimpleApnsPayloadBuilder
 import com.eatthepath.pushy.apns.util.SimpleApnsPushNotification
 import com.eatthepath.pushy.apns.util.SimpleApnsPushNotification.DEFAULT_EXPIRATION_PERIOD
 import com.eatthepath.pushy.apns.util.TokenUtil
@@ -14,8 +16,8 @@ import kotlin.coroutines.suspendCoroutine
 class Notification(
     private val token: String,
     private val appIdentifier: String,
-    private val payload: String,
-    private val voip: Boolean = false
+    private val voip: Boolean = false,
+    private val payloadBuilder: ApnsPayloadBuilder.() -> Unit
 ) {
     val notification = SimpleApnsPushNotification(
         TokenUtil.sanitizeTokenString(token),
@@ -24,7 +26,7 @@ class Notification(
         } else {
             appIdentifier
         },
-        payload,
+        SimpleApnsPayloadBuilder().apply(payloadBuilder).build(),
         Instant.now().plus(DEFAULT_EXPIRATION_PERIOD),
         DeliveryPriority.IMMEDIATE,
         PushType.VOIP

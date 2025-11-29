@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    alias(additionals.plugins.kotlin.serialization)
 }
 
 kotlin {
@@ -40,6 +41,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(projects.shared)
+            implementation(additionals.multiplatform.http.client)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
