@@ -25,6 +25,8 @@ dependencies {
     implementation(libs.ktor.server.cors)
     implementation(libs.ktor.server.content.negotiation)
 
+    implementation(libs.livekit.server)
+
     testImplementation(libs.ktor.serverTestHost)
     testImplementation(libs.kotlin.testJunit)
 }

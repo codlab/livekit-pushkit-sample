@@ -3,6 +3,8 @@ package eu.codlab.push
 import com.eatthepath.pushy.apns.ApnsClient
 import com.eatthepath.pushy.apns.ApnsClientBuilder
 import com.eatthepath.pushy.apns.auth.ApnsSigningKey
+import eu.codlab.push.livekit.Livekit
+import eu.codlab.push.livekit.RoomService
 import eu.codlab.push.notifications.Notification
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
@@ -25,10 +27,18 @@ import java.io.File
 
 
 fun main() {
+    val livekitUrl = System.getenv("LIVEKIT_URL")
+    val livekitUrlWss = System.getenv("LIVEKIT_URL_WSS")
+    val livekitApiKey = System.getenv("LIVEKIT_API_KEY")
+    val livekitApiSecret = System.getenv("LIVEKIT_API_SECRET")
+
     val appIdentifier = System.getenv("APNS_APP_IDENTIFIER")
     val teamId = System.getenv("APNS_TEAM_ID")
     val keyId = System.getenv("APNS_KEY_ID")
     val keyPath = System.getenv("APNS_KEY_PATH_P8")
+
+    val roomService = Livekit.create(livekitUrl, livekitUrlWss, livekitApiKey, livekitApiSecret)
+
     val apnsClients = listOf(
         ApnsClientBuilder.DEVELOPMENT_APNS_HOST,
         ApnsClientBuilder.PRODUCTION_APNS_HOST
@@ -47,11 +57,17 @@ fun main() {
     }
 
     embeddedServer(Netty, port = 4444, host = "127.0.0.1") {
-        module(appIdentifier, apnsClients)
+        module(roomService, appIdentifier, apnsClients)
     }.start(wait = true)
 }
 
-fun Application.module(appIdentifier: String, apnsClients: List<ApnsClient>) {
+fun Application.module(
+    roomService: RoomService,
+    appIdentifier: String,
+    apnsClients: List<ApnsClient>,
+) {
+    val json = Json
+
     install(CORS) {
         anyHost()
         allowHeader(HttpHeaders.ContentType)
@@ -79,7 +95,14 @@ fun Application.module(appIdentifier: String, apnsClients: List<ApnsClient>) {
                     ?: throw IllegalArgumentException("device token not found")
 
                 val notification = Notification(deviceToken, appIdentifier, true) {
-                    // nothing for now
+                    val invitation = roomService.invite(
+                        room = body.room,
+                        inviter = body.inviter,
+                        invitee = body.deviceId,
+                        deviceId = body.deviceId
+                    )
+
+                    this.addCustomProperty("payload", json.encodeToString(invitation))
                 }
 
                 var result = ""
@@ -117,6 +140,7 @@ fun Application.module(appIdentifier: String, apnsClients: List<ApnsClient>) {
 
 @Serializable
 data class BodyInvite(
+    val inviter: String,
     @SerialName("device_id")
     val deviceId: String,
     val room: String,
